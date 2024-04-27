@@ -46,7 +46,7 @@ def preprocess_ljspeech(args):
     from text import G2pEn, phn2id_en
 
     dataset_path = pathlib.Path(args.dataset_path)
-    metadata_path = dataset_path / "metadata.csv.txt"
+    metadata_path = dataset_path / "metadata.csv"
     meta_info = []
     g2p = G2pEn()
     with open(metadata_path) as f:
