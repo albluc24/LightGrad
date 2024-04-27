@@ -10,7 +10,8 @@ is the dataset template, a dict for every entry.
 [{"name": "LJ029-0196", "wav_path": "../LJSpeech-1.1/wavs/LJ029-0196.wav", "text": "and that he would visit San Antonio, Houston, Fort Worth, Dallas, and Austin.", "phonemes": ["AH0", "N", "D", "-", "DH", "AE1", "T", "-", "HH", "IY1", "-", "W", "UH1", "D", "-", "V", "IH1", "Z", "AH0", "T", "-", "S", "AE1", "N", "-", "AE0", "N", "T", "OW1", "N", "IY0", "OW0", ",", "HH", "Y", "UW1", "S", "T", "AH0", "N", ",", "F", "AO1", "R", "T", "-", "W", "ER1", "TH", ",", "D", "AE1", "L", "AH0", "S", ",", "AH0", "N", "D", "-", "AO1", "S", "T", "AH0", "N", "-", "."]}]
 ### conclusion
 might be adapted if it's too hard to eradicate, just create a new tokenizer with '1': 1 and so on leaving eos, bos and pad unchanged.
-
+## first run
+training model with all default settings. Code might be simple, but standard bloated model is only 22MB!
 # LightGrad: Lightweight Diffusion Probabilistic Model for Text-to-speech
 Demos are available at: https://thuhcsi.github.io/LightGrad/
 
