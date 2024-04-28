@@ -1,4 +1,4 @@
-#usefull findings:
+# usefull findings:
 ## preprocess stuff
 preprocess creates a bunch of json files, like: 
 phn2id.json  test_dataset.json  train_dataset.json  valid_dataset.json
