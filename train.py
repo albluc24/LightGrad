@@ -25,6 +25,7 @@ from LightGrad.dataset import Dataset, collateFn
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", type=str, help="path to config file")
+    parser.add_argument("-d", "--device", type=str, help="device to use for training")
     return parser.parse_args()
 
 
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         start_steps = steps + 1
         model.load_state_dict(state_dict)
 
-    model = model.cuda()
+    model = model.to(args.device)
 
     print("Initializing optimizer...")
     optimizer = torch.optim.Adam(params=model.parameters(), lr=config["learning_rate"])
@@ -106,8 +107,8 @@ if __name__ == "__main__":
         ) as progress_bar:
             for batch_idx, batch in enumerate(progress_bar):
                 model.zero_grad()
-                x, x_lengths = batch["x"].cuda(), batch["x_lengths"].cuda()
-                y, y_lengths = batch["y"].cuda(), batch["y_lengths"].cuda()
+                x, x_lengths = batch["x"].to(args.device), batch["x_lengths"].to(args.device)
+                y, y_lengths = batch["y"].to(args.device), batch["y_lengths"].to(args.device)
                 dur_loss, prior_loss, diff_loss = model.compute_loss(
                     x, x_lengths, y, y_lengths, out_size=out_size
                 )
@@ -163,8 +164,8 @@ if __name__ == "__main__":
             all_prior_loss = []
             all_diffusion_loss = []
             for _, item in enumerate(val_loader):
-                x, x_lengths = batch["x"].cuda(), batch["x_lengths"].cuda()
-                y, y_lengths = batch["y"].cuda(), batch["y_lengths"].cuda()
+                x, x_lengths = batch["x"].to(args.device), batch["x_lengths"].to(args.device)
+                y, y_lengths = batch["y"].to(args.device), batch["y_lengths"].to(args.device)
 
                 dur_loss, prior_loss, diff_loss = model.compute_loss(
                     x, x_lengths, y, y_lengths, out_size=out_size
