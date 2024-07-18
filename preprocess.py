@@ -65,7 +65,6 @@ def preprocess(args):
             units=embedder.collector(result)
             text=[i['text'] for i in units]
             mapping=mapping|set(text)
-            text=' '.join(text)
             emb_path = args.export_dir / "embs" / f"{numb}.npy"
             np.save(emb_path, emb)
             meta_info.append(
