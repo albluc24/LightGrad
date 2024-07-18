@@ -11,9 +11,7 @@ from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 from LightGrad import LightGrad
-from utils import plot_tensor, save_plot
 import yaml
 import argparse
 import random
@@ -71,14 +69,8 @@ if __name__ == "__main__":
 
     print("Initializing optimizer...")
     optimizer = torch.optim.Adam(params=model.parameters(), lr=config["learning_rate"])
-
-    print("Initializing logger...")
-    logger = SummaryWriter(log_dir=log_dir)
-
     ckpt_dir = log_dir / "ckpt"
-    pic_dir = log_dir / "pic"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    pic_dir.mkdir(parents=True, exist_ok=True)
     print("Start training...")
     iteration = start_steps
     out_size = config["out_size"] * config["sample_rate"] // config["hop_size"]
@@ -108,23 +100,6 @@ if __name__ == "__main__":
                     model.decoder.parameters(), max_norm=1
                 )
                 optimizer.step()
-
-                logger.add_scalar(
-                    "training/duration_loss", dur_loss.item(), global_step=iteration
-                )
-                logger.add_scalar(
-                    "training/prior_loss", prior_loss.item(), global_step=iteration
-                )
-                logger.add_scalar(
-                    "training/diffusion_loss", diff_loss.item(), global_step=iteration
-                )
-                logger.add_scalar(
-                    "training/encoder_grad_norm", enc_grad_norm, global_step=iteration
-                )
-                logger.add_scalar(
-                    "training/decoder_grad_norm", dec_grad_norm, global_step=iteration
-                )
-
                 dur_losses.append(dur_loss.item())
                 prior_losses.append(prior_loss.item())
                 diff_losses.append(diff_loss.item())
