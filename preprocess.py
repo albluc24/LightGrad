@@ -83,6 +83,7 @@ def preprocess(args):
     ]
     train_dataset = meta_info[args.test_sample_count +
                               args.valid_sample_count:]
+    mapping=mapping|set(('<bos>','<eos>'))
     mapping= {s: i + 1 for i, s in enumerate(mapping)}
     return train_dataset, valid_dataset, test_dataset, mapping
 
