@@ -82,8 +82,8 @@ def collateFn(batch):
     padded_mels = pad_sequence([batch[i]['mel'] for i in sorted_idx],
                                batch_first=True)
     batch_size, old_t, mel_d = padded_mels.shape
-    txts = [batch[i]['txt'] for i in sorted_idx]
-    wavs = [batch[i]['wav'] for i in sorted_idx]
+    #txts = [batch[i]['txt'] for i in sorted_idx]
+    #wavs = [batch[i]['wav'] for i in sorted_idx]
     item_names = [batch[i]['item_name'] for i in sorted_idx]
     if old_t % 4 != 0:
         new_t = int(math.ceil(old_t / 4) * 4)
@@ -95,8 +95,6 @@ def collateFn(batch):
         'x_lengths': phs_lengths,
         'y': padded_mels.permute(0, 2, 1),
         'y_lengths': mel_lengths,
-        'txts': txts,
-        'wavs': wavs,
         'names': item_names
     }
 
