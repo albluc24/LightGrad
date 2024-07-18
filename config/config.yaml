@@ -1,6 +1,6 @@
-train_datalist_path: ../dataset/train_dataset.json
-valid_datalist_path: ../dataset/valid_dataset.json
-phn2id_path: ../dataset/phn2id.json
+train_datalist_path: dataset/train_dataset.json
+valid_datalist_path: dataset/valid_dataset.json
+phn2id_path: dataset/phn2id.json
 ckpt:
 
 n_mels: 40
