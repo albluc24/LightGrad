@@ -61,6 +61,7 @@ def preprocess(args):
             try:
                 result=embedder.embed(s,e)
             except Exception as ex: breakpoint()
+            if len(result[0]) <=200: continue
             emb=pca.transform(result)
             units=embedder.collector(result)
             text=[i['text'] for i in units]
