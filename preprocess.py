@@ -1,11 +1,14 @@
 import argparse
+import sys, os
 import pathlib
 import random
 import re
 import json
 import tqdm
 import itertools
-
+from joblib import load
+from tqdm import tqdm
+sys.path.append(os.path.dirname(os.getcwd()))
 
 # for BZNSYP, 200 samples for test, 200 samples for validation
 # for LJSpeech, 523 samples for test, 348 samples for validation
@@ -13,8 +16,8 @@ import itertools
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("dataset", choices=["ljspeech", "bznsyp"])
-    parser.add_argument("dataset_path", type=str, help="path to dataset dir")
+
+    parser.add_argument("config_path", type=str, help="path to dataset dir")
     parser.add_argument("export_dir", type=str,
                         help="path to save preprocess result")
     parser.add_argument("--test_sample_count", type=int, default=200)
@@ -24,14 +27,9 @@ def get_args():
 
 def main():
     args = get_args()
-    if args.dataset == "ljspeech":
-        (train_dataset, valid_dataset, test_dataset,
-         phn2id) = preprocess_ljspeech(args)
-    if args.dataset == "bznsyp":
-        (train_dataset, valid_dataset, test_dataset,
-         phn2id) = preprocess_bznsyp(args)
     export_dir = pathlib.Path(args.export_dir)
-    export_dir.mkdir(parents=True, exist_ok=True)
+    export_dir/ 'embs'.mkdir(parents=True, exist_ok=True)
+    (train_dataset, valid_dataset, test_dataset, phn2id) = preprocess(args)
     with open(export_dir / "train_dataset.json", "w") as f:
         json.dump(train_dataset, f)
     with open(export_dir / "valid_dataset.json", "w") as f:
@@ -42,27 +40,43 @@ def main():
         json.dump(phn2id, f)
 
 
-def preprocess_ljspeech(args):
-    from text import G2pEn, phn2id_en
-
-    dataset_path = pathlib.Path(args.dataset_path)
-    metadata_path = dataset_path / "metadata.csv"
+def preprocess(args):
+    numb=0
+    mapping=set()
+    from training import loaders
+    import training.utils
+    from training.unit_collector import unitCollector as Embedder
+    config_path = pathlib.Path(args.config_path)
+    config=training.utils.load_config(config_path)
+    kmeans=load(config['kmeans_file'])
+    pca=load(config['pca_file'])
+    embedder=Embedder(config)
+    if config['inv_training_cutoff']>=0:
+        data=loaders.islice(get_loader_from_config(config), config['inv_training_cutoff'])
+        data=tqdm(data, total=config['inv_training_cutoff'])
+    else: data=tqdm(get_loader_from_config(config))
     meta_info = []
-    g2p = G2pEn()
-    with open(metadata_path) as f:
-        for line in tqdm.tqdm(f.readlines()):
-            name, _, normalized_text = line.strip().split("|")
-            wav_path = dataset_path / "wavs" / f"{name}.wav"
-            if wav_path.exists():
-                phonemes = g2p(normalized_text)
-                meta_info.append(
-                    {
-                        "name": name,
-                        "wav_path": str(wav_path),
-                        "text": normalized_text,
-                        "phonemes": phonemes,
+    for sample in data:
+        segments=embedder.load_and_split_file(sample)
+        training.utils.cleanup_temporary_audio(sample, [16000, 32000])
+        for s,e in segments:
+            try:
+                result=embedder.embed(s,e)
+            except Exception as ex: breakpoint()
+            emb=pca.transform(result)
+            units=embedder.collector(result)
+            text=[i['text'] for i in units]
+            mapping|set(text)
+            text=' '.join(text)
+            emb_path = args.export_dir / "embs" / f"{numb}.npy"
+            meta_info.append(
+                {
+                    "name": str(numb),
+                    "emb_path": str(emb_path),
+                    "phonemes": text,
                     }
                 )
+            numb+=1
     random.shuffle(meta_info)
     test_dataset = meta_info[: args.test_sample_count]
     valid_dataset = meta_info[
@@ -70,7 +84,9 @@ def preprocess_ljspeech(args):
     ]
     train_dataset = meta_info[args.test_sample_count +
                               args.valid_sample_count:]
-    return train_dataset, valid_dataset, test_dataset, phn2id_en
+    mapping= {s: i + 1 for i, s in enumerate(mapping)}
+    return train_dataset, valid_dataset, test_dataset, mapping
+
 
 
 def preprocess_bznsyp(args):
