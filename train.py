@@ -40,24 +40,10 @@ if __name__ == "__main__":
     train_dataset = Dataset(
         config["train_datalist_path"],
         config["phn2id_path"],
-        config["sample_rate"],
-        config["n_fft"],
-        config["n_mels"],
-        config["f_min"],
-        config["f_max"],
-        config["hop_size"],
-        config["win_size"],
     )
     val_dataset = Dataset(
         config["valid_datalist_path"],
         config["phn2id_path"],
-        config["sample_rate"],
-        config["n_fft"],
-        config["n_mels"],
-        config["f_min"],
-        config["f_max"],
-        config["hop_size"],
-        config["win_size"],
     )
     train_loader = DataLoader(
         train_dataset,
