@@ -136,11 +136,6 @@ if __name__ == "__main__":
             average_dur_loss = sum(all_dur_loss) / len(all_dur_loss)
             average_prior_loss = sum(all_prior_loss) / len(all_prior_loss)
             average_diffusion_loss = sum(all_diffusion_loss) / len(all_diffusion_loss)
-            logger.add_scalar("val/duration_loss", average_dur_loss, global_step=epoch)
-            logger.add_scalar("val/prior_loss", average_prior_loss, global_step=epoch)
-            logger.add_scalar(
-                "val/diffusion_loss", average_diffusion_loss, global_step=epoch
-            )
             print(
                 f"val duration_loss: {average_dur_loss}, "
                 f"prior_loss: {average_prior_loss}, "
@@ -152,34 +147,6 @@ if __name__ == "__main__":
             y_dec = y_dec[idx].cpu()
             y = y[idx].cpu()
             attn = attn[idx][0].cpu()
-            logger.add_image(
-                "image/generated_enc",
-                plot_tensor(y_enc),
-                global_step=epoch,
-                dataformats="HWC",
-            )
-            logger.add_image(
-                "image/generated_dec",
-                plot_tensor(y_dec),
-                global_step=epoch,
-                dataformats="HWC",
-            )
-            logger.add_image(
-                "image/alignment",
-                plot_tensor(attn),
-                global_step=epoch,
-                dataformats="HWC",
-            )
-            logger.add_image(
-                "image/ground_truth",
-                plot_tensor(y),
-                global_step=epoch,
-                dataformats="HWC",
-            )
-            save_plot(y_enc, pic_dir / f"generated_enc_{epoch}.png")
-            save_plot(y_dec, pic_dir / f"generated_dec_{epoch}.png")
-            save_plot(attn, pic_dir / f"alignment_{epoch}.png")
-            save_plot(y, pic_dir / f"ground_truth_{epoch}.png")
         torch.save(
             [epoch, iteration, model.state_dict()],
             f=ckpt_dir / f"LightGrad_{epoch}_{iteration}.pt",
