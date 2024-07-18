@@ -73,8 +73,6 @@ if __name__ == "__main__":
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     print("Start training...")
     iteration = start_steps
-    out_size = config["out_size"] * config["sample_rate"] // config["hop_size"]
-
     for epoch in range(start_epoch, start_epoch + 10000):
         model.train()
         dur_losses = []
@@ -88,11 +86,10 @@ if __name__ == "__main__":
                 x, x_lengths = batch["x"].to(args.device), batch["x_lengths"].to(args.device)
                 y, y_lengths = batch["y"].to(args.device), batch["y_lengths"].to(args.device)
                 dur_loss, prior_loss, diff_loss = model.compute_loss(
-                    x, x_lengths, y, y_lengths, out_size=out_size
+                    x, x_lengths, y, y_lengths
                 )
                 loss = sum([dur_loss, prior_loss, diff_loss])
                 loss.backward()
-
                 enc_grad_norm = torch.nn.utils.clip_grad_norm_(
                     model.encoder.parameters(), max_norm=1
                 )
@@ -129,7 +126,7 @@ if __name__ == "__main__":
                 y, y_lengths = batch["y"].to(args.device), batch["y_lengths"].to(args.device)
 
                 dur_loss, prior_loss, diff_loss = model.compute_loss(
-                    x, x_lengths, y, y_lengths, out_size=out_size
+                    x, x_lengths, y, y_lengths
                 )
                 loss = sum([dur_loss, prior_loss, diff_loss])
                 all_dur_loss.append(dur_loss)
