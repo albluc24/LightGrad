@@ -47,7 +47,9 @@ class Dataset(torch.utils.data.Dataset):
         phonemes = self.datalist[i]['phonemes']
         mel=self.load_audio_and_melspectrogram(wav_path)
         if self.add_blank:
-            phonemes = " <blank> ".join(phonemes).split(' ')
+            newp=[]
+            for p in phonemes:
+                newp+=["<blank>",p]
         phonemes = ['<bos>'] + phonemes + ['<eos>']
         ph_idx = [self.phone_set[x] for x in phonemes if x in self.phone_set]
         self.cache[i] = {

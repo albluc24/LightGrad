@@ -63,6 +63,7 @@ def preprocess(args):
             except Exception as ex: breakpoint()
             if result.shape[0] <=200: continue
             emb=pca.transform(result)
+            if np.isnan(emb).any(): breakpoint()
             units=embedder.collector(result)
             text=[i['text'] for i in units]
             mapping=mapping|set(text)
@@ -84,6 +85,8 @@ def preprocess(args):
     train_dataset = meta_info[args.test_sample_count +
                               args.valid_sample_count:]
     mapping=mapping|set(('<bos>','<eos>'))
+    mapping=list(mapping)
+    mapping=['<blank>']+mapping
     mapping= {s: i + 1 for i, s in enumerate(mapping)}
     return train_dataset, valid_dataset, test_dataset, mapping
 
