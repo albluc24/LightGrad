@@ -2,17 +2,21 @@ import json
 import numpy as np
 import yaml
 import torch
+import soundfile
+import sys, os
 import onnxruntime as ort
+sys.path.append(os.path.dirname(os.getcwd()))
+from training import crossconcat
 from LightGrad import LightGrad
-
-
+from joblib import load
+from functools import reduce
 def toid(phonemes, phn2id):
     """
     phonemes: phonemes separated by ' '
     phn2id: phn2id dict
     """
-    #return [phn2id[x] for x in ['<bos>'] + phonemes.split(' ') + ['<eos>']]
     return [phn2id[x] for x in ['<bos>'] + phonemes + ['<eos>']]
+    #return [phn2id[x] for x in phonemes]
 
 N_STEP = 4
 TEMP = 1.5
@@ -36,12 +40,30 @@ randominputlen=torch.tensor(len(randominput), dtype=torch.long).unsqueeze(0)
 #model.forward(randominput, randominputlen, 4)
 with open(config['valid_datalist_path']) as f: val=json.load(f)
 test=ort.InferenceSession('logs/model.onnx')
+inv=load('../training/concat_inv.dat')
+sound=[]
 for sample in val:
     idx=toid(sample['phonemes'], ids)
     seqlen=torch.tensor(len(idx), dtype=torch.long).unsqueeze(0)
     seq=torch.tensor(idx).unsqueeze(0)
     enc, dec, al=model.forward(seq, seqlen, n_timesteps=4)
-    enc, dec, al=test.run(None, {'seq': seq.numpy(), 'len': seqlen.numpy(), 'timesteps': np.array(4), 'temp': np.array(1.0),'spk':None})
+    #enc, dec, al=test.run(None, {'seq': seq.numpy(), 'len': seqlen.numpy(), 'timesteps': np.array(4), 'temp': np.array(1.0),'spk':None})
     al=al[0,0,:]
-    for input in test.get_inputs(): print(f"Input name: {input.name}, shape: {input.shape}, type: {input.type}")
+    #al= torch.nn.functional.pad(al, (1, 0))
+    al= torch.cumsum(al, dim=0).tolist()
+    dec=dec[0].T
+    #for input in test.get_inputs(): print(f"Input name: {input.name}, shape: {input.shape}, type: {input.type}")
+    beginning=0
+    for n,u in enumerate(al[1:-1]):
+        u=int(u)
+        char=sample['phonemes'][n]
+        embedding=torch.mean(dec[beginning:u],dim=0)
+        beginning=u
+        cands=inv['k'][char].kneighbors([embedding.detach().numpy()], return_distance=False)[0]
+        cand=inv[char][cands[0]]
+        #input(cands[0])
+        sound.append(cand)
+    audio=[i['audio'] for i in sound]
+    audio=np.concatenate(audio)
+    soundfile.write('result.wav', audio, 32000)
     breakpoint()
