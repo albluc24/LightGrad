@@ -107,7 +107,6 @@ class MultiHeadAttention(BaseModule):
         self.heads_share = heads_share
         self.proximal_bias = proximal_bias
         self.p_dropout = p_dropout
-        self.attn = None
 
         self.k_channels = channels // n_heads
         self.conv_q = torch.nn.Conv1d(channels, channels, 1)
@@ -135,7 +134,7 @@ class MultiHeadAttention(BaseModule):
         k = self.conv_k(c)
         v = self.conv_v(c)
         
-        x, self.attn = self.attention(q, k, v, mask=attn_mask)
+        x, selfattn = self.attention(q, k, v, mask=attn_mask)
 
         x = self.conv_o(x)
         return x
