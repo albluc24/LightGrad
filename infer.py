@@ -15,8 +15,8 @@ def toid(phonemes, phn2id):
     phonemes: phonemes separated by ' '
     phn2id: phn2id dict
     """
-    return [phn2id[x] for x in ['<bos>'] + phonemes + ['<eos>']]
-    #return [phn2id[x] for x in phonemes]
+    #return [phn2id[x] for x in ['<bos>'] + phonemes + ['<eos>']]
+    return [phn2id[x] for x in phonemes]
 
 N_STEP = 4
 TEMP = 1.5
@@ -51,15 +51,16 @@ for sample in val:
     al=al[0,0,:]
     #al= torch.nn.functional.pad(al, (1, 0))
     al= torch.cumsum(al, dim=0).tolist()
-    dec=dec[0].T
+    dec=dec[0].T.detach().numpy()
     #for input in test.get_inputs(): print(f"Input name: {input.name}, shape: {input.shape}, type: {input.type}")
     beginning=0
+    dec=np.load(sample['emb_path'])
     for n,u in enumerate(al[1:-1]):
         u=int(u)
         char=sample['phonemes'][n]
-        embedding=torch.mean(dec[beginning:u],dim=0)
+        embedding=np.mean(dec[beginning:u],axis=0)
         beginning=u
-        cands=inv['k'][char].kneighbors([embedding.detach().numpy()], return_distance=False)[0]
+        cands=inv['k'][char].kneighbors([embedding], return_distance=False)[0]
         cand=inv[char][cands[0]]
         #input(cands[0])
         sound.append(cand)
