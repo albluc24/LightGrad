@@ -216,7 +216,8 @@ class LightGrad(BaseModule):
                                        solver)
         decoder_outputs = decoder_outputs[:, :, :y_max_length]
 
-        return encoder_outputs, decoder_outputs, attn[:, :, :y_max_length]
+        #return encoder_outputs, decoder_outputs, attn[:, :, :y_max_length]
+        return encoder_outputs, decoder_outputs, w_ceil
 
     def compute_loss(self,
                      x,

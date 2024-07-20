@@ -1,6 +1,7 @@
 .vscode/
 __pycache__
 log/
+logs/
 venv/
 logs/pic
 logs/events*
