@@ -22,7 +22,7 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self,
                  datalist_path,
                  phn2id_path,
-                 add_blank=True):
+                 add_blank=False):
         super().__init__()
         with open(datalist_path) as f:
             self.datalist = json.load(f)
