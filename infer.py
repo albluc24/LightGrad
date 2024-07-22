@@ -54,16 +54,19 @@ for sample in val:
     dec=dec[0].T.detach().numpy()
     #for input in test.get_inputs(): print(f"Input name: {input.name}, shape: {input.shape}, type: {input.type}")
     beginning=0
-    dec=np.load(sample['emb_path'])
-    for n,u in enumerate(al[1:-1]):
+    breakpoint()
+    #dec=np.load(sample['emb_path'])
+    for n,u in enumerate(al):
         u=int(u)
         char=sample['phonemes'][n]
-        embedding=np.mean(dec[beginning:u],axis=0)
+        embedding=np.mean(dec[beginning:u+1],axis=0)
         beginning=u
+        if np.isnan(embedding).any(): breakpoint()
         cands=inv['k'][char].kneighbors([embedding], return_distance=False)[0]
         cand=inv[char][cands[0]]
         #input(cands[0])
         sound.append(cand)
+        #if n==len(sample['phonemes'])-1: breakpoint()
     audio=[i['audio'] for i in sound]
     audio=np.concatenate(audio)
     soundfile.write('result.wav', audio, 32000)
