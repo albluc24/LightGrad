@@ -50,7 +50,6 @@ class Dataset(torch.utils.data.Dataset):
             newp=[]
             for p in phonemes:
                 newp+=["<blank>",p]
-        phonemes = ['<bos>'] + phonemes + ['<eos>']
         ph_idx = [self.phone_set[x] for x in phonemes if x in self.phone_set]
         self.cache[i] = {
             'item_name': item_name,
