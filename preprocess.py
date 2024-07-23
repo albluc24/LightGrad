@@ -64,7 +64,7 @@ def preprocess(args):
             if result.shape[0] <=200: continue
             emb=pca.transform(result)
             if np.isnan(emb).any(): breakpoint()
-            units=embedder.collector(result)
+            units=embedder.collector(emb)
             text=[i['text'].split('-')[0] for i in units]
             mapping=mapping|set(text)
             emb_path = args.export_dir / "embs" / f"{numb}.npy"
