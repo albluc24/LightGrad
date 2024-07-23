@@ -41,8 +41,9 @@ randominputlen=torch.tensor(len(randominput), dtype=torch.long).unsqueeze(0)
 with open(config['valid_datalist_path']) as f: val=json.load(f)
 test=ort.InferenceSession('logs/model.onnx')
 inv=load('../training/concat_inv.dat')
-sound=[]
+
 for sample in val:
+    sound=[]
     idx=toid(sample['phonemes'], ids)
     seqlen=torch.tensor(len(idx), dtype=torch.long).unsqueeze(0)
     seq=torch.tensor(idx).unsqueeze(0)
