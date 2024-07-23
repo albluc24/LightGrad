@@ -27,7 +27,7 @@ with open(config_path) as f: config = yaml.load(f, yaml.SafeLoader)
 with open(config['phn2id_path']) as f: ids = json.load(f)
 vocab_size = len(ids) + 1
 #ckpt_path = 'logs/ckpt/LightGrad_7_6357.pt'
-ckpt_path = '/users/luca/gradquadro.pt'
+ckpt_path = '/users/luca/vanilla.pt'
 
 print('loading ', ckpt_path)
 _, _, state_dict = torch.load(ckpt_path, map_location='cpu')
@@ -54,11 +54,11 @@ for sample in val:
     dec=dec[0].T.detach().numpy()
     #for input in test.get_inputs(): print(f"Input name: {input.name}, shape: {input.shape}, type: {input.type}")
     beginning=0
-    breakpoint()
     #dec=np.load(sample['emb_path'])
     for n,u in enumerate(al):
         u=int(u)
-        char=sample['phonemes'][n]
+        if n!=0: char='-'.join((sample['phonemes'][n], sample['phonemes'][n-1]))
+        else: char='-'.join((sample['phonemes'][n], sample['phonemes'][n]))
         embedding=np.mean(dec[beginning:u+1],axis=0)
         beginning=u
         if np.isnan(embedding).any(): breakpoint()
