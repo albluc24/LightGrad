@@ -65,7 +65,7 @@ def preprocess(args):
             emb=pca.transform(result)
             if np.isnan(emb).any(): breakpoint()
             units=embedder.collector(result)
-            text=[i['text'] for i in units]
+            text=[i['text'].split('-')[0] for i in units]
             mapping=mapping|set(text)
             emb_path = args.export_dir / "embs" / f"{numb}.npy"
             np.save(emb_path, emb)
