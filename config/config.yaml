@@ -1,7 +1,7 @@
 train_datalist_path: dataset/train_dataset.json
 valid_datalist_path: dataset/valid_dataset.json
 phn2id_path: dataset/phn2id.json
-ckpt:
+ckpt: logs/ckpt/LightGrad_1_421.pt
 
 n_mels: 40
 
@@ -21,7 +21,7 @@ pe_scale: 1000
 
 log_dir: logs/
 max_step: 1700000
-batch_size: 4
+batch_size: 10
 learning_rate: 0.0001
 out_size: 2
 

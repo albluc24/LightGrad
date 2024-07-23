@@ -10,6 +10,7 @@ from training import crossconcat
 from LightGrad import LightGrad
 from joblib import load
 from functools import reduce
+from tqdm import tqdm
 def toid(phonemes, phn2id):
     """
     phonemes: phonemes separated by ' '
@@ -41,8 +42,14 @@ randominputlen=torch.tensor(len(randominput), dtype=torch.long).unsqueeze(0)
 with open(config['valid_datalist_path']) as f: val=json.load(f)
 test=ort.InferenceSession('logs/model.onnx')
 inv=load('../training/concat_inv.dat')
+<<<<<<< Updated upstream
 sound=[]
 for sample in val:
+=======
+
+for sample in tqdm(val):
+    sound=[]
+>>>>>>> Stashed changes
     idx=toid(sample['phonemes'], ids)
     seqlen=torch.tensor(len(idx), dtype=torch.long).unsqueeze(0)
     seq=torch.tensor(idx).unsqueeze(0)
@@ -67,7 +74,4 @@ for sample in val:
         #input(cands[0])
         sound.append(cand)
         #if n==len(sample['phonemes'])-1: breakpoint()
-    audio=[i['audio'] for i in sound]
-    audio=np.concatenate(audio)
-    soundfile.write('result.wav', audio, 32000)
-    breakpoint()
+    soundfile.write('result.wav', np.concatenate([i['audio'] for i in sound]), 32000)
