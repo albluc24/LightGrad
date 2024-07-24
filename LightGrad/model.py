@@ -259,7 +259,7 @@ class LightGrad(BaseModule):
 
         y_mask = sequence_mask(y_lengths, y_max_length).unsqueeze(1).to(x_mask)
         attn_mask = x_mask.unsqueeze(-1) * y_mask.unsqueeze(2)
-        attn=torch.zeros(attn_mask.squeeze(1).shape)
+        attn=self.relocate_input([torch.zeros(attn_mask.squeeze(1).shape)])[0]
         for b in range(len(durations)):
             durationstemp=torch.cumsum(durations[b],dim=0)
             begin=0
@@ -268,7 +268,6 @@ class LightGrad(BaseModule):
                 begin=i+1
         # Compute loss between predicted log-scaled durations and those obtained from MAS
         logw_ = torch.log(1 + torch.sum(attn.unsqueeze(1), -1)) * x_mask
-        breakpoint()
         #logw_ = torch.log(1 + attn.unsqueeze(1)) * x_mask
         # logw_ = torch.log(1 + torch.sum(attn.unsqueeze(1), -1)) * x_mask
         dur_loss = duration_loss(logw, logw_, x_lengths)
