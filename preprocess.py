@@ -27,6 +27,7 @@ def main():
     args.export_dir = pathlib.Path(args.export_dir)
     export_dir =args.export_dir 
     (export_dir/ 'embs').mkdir(parents=True, exist_ok=True)
+    (export_dir/ 'durs').mkdir(parents=True, exist_ok=True)
     (train_dataset, valid_dataset, test_dataset, phn2id) = preprocess(args)
     with open(export_dir / "train_dataset.json", "w") as f:
         json.dump(train_dataset, f)
@@ -66,13 +67,17 @@ def preprocess(args):
             if np.isnan(emb).any(): breakpoint()
             units=embedder.collector(emb)
             text=[i['text'].split('-')[0] for i in units]
+            durations=np.array([i['duration'] for i in units])
             mapping=mapping|set(text)
             emb_path = args.export_dir / "embs" / f"{numb}.npy"
+            dur_path = args.export_dir / "durs" / f"{numb}.npy"
             np.save(emb_path, emb)
+            np.save(dur_path, durations)
             meta_info.append(
                 {
                     "name": str(numb),
                     "emb_path": str(emb_path),
+                    "dur_path": str(dur_path),
                     "phonemes": text,
                     }
                 )

@@ -86,8 +86,9 @@ if __name__ == "__main__":
                 model.zero_grad()
                 x, x_lengths = batch["x"].to(args.device), batch["x_lengths"].to(args.device)
                 y, y_lengths = batch["y"].to(args.device), batch["y_lengths"].to(args.device)
+                durations = batch["durations"].to(args.device)
                 dur_loss, prior_loss, diff_loss = model.compute_loss(
-                    x, x_lengths, y, y_lengths, out_size=out_size
+                    x, x_lengths, y, y_lengths, durations, out_size=out_size
                 )
                 loss = sum([dur_loss, prior_loss, diff_loss])
                 loss.backward()
@@ -125,9 +126,10 @@ if __name__ == "__main__":
             for _, item in enumerate(val_loader):
                 x, x_lengths = batch["x"].to(args.device), batch["x_lengths"].to(args.device)
                 y, y_lengths = batch["y"].to(args.device), batch["y_lengths"].to(args.device)
+                durations = batch["durations"].to(args.device)
 
                 dur_loss, prior_loss, diff_loss = model.compute_loss(
-                    x, x_lengths, y, y_lengths, out_size=out_size
+                    x, x_lengths, y, y_lengths, durations, out_size=out_size
                 )
                 loss = sum([dur_loss, prior_loss, diff_loss])
                 all_dur_loss.append(dur_loss)

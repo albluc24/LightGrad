@@ -224,6 +224,7 @@ class LightGrad(BaseModule):
                      x_lengths,
                      y,
                      y_lengths,
+                     durations,
                      spk=None,
                      out_size=None):
         """
@@ -237,6 +238,7 @@ class LightGrad(BaseModule):
             x_lengths (torch.Tensor): lengths of texts in batch.
             y (torch.Tensor): batch of corresponding mel-spectrograms.
             y_lengths (torch.Tensor): lengths of mel-spectrograms in batch.
+            durations(torch.Tensor): durations of texts in batch.
             out_size (int, optional): length (in mel's sampling rate) of segment to cut, on which decoder will be trained.
                 Should be divisible by 2^{num of UNet downsamplings}. Needed to increase batch size.
         """
@@ -257,31 +259,17 @@ class LightGrad(BaseModule):
 
         y_mask = sequence_mask(y_lengths, y_max_length).unsqueeze(1).to(x_mask)
         attn_mask = x_mask.unsqueeze(-1) * y_mask.unsqueeze(2)
-
-        # Use MAS to find most likely alignment `attn` between text and mel-spectrogram
-        with torch.no_grad():
-            # sum(-0.5*log(2*pi*sigma_i^2))
-            const = -0.5 * math.log(2 * math.pi) * self.n_feats
-            # factor: (b,80,tx)
-            factor = -0.5 * torch.ones(
-                mu_x.shape, dtype=mu_x.dtype, device=mu_x.device)
-            # y_square: (b,tx,ty), y_square_{i,j}: mu_i is aligned with y_j
-            # sum(-0.5*y_i^2*sigma^(-2))
-            y_square = torch.matmul(factor.transpose(1, 2), y**2)
-            # y_mu_double: (b,tx,ty), sum(y_i*mu_i*sigma_i^(-2))
-            y_mu_double = torch.matmul(mu_x.transpose(1, 2), y)
-            # mu_square: (b,tx,1), -0.5*sum(mu_i^2*sigma_i^(-2))
-            mu_square = torch.sum(factor * (mu_x**2), 1).unsqueeze(-1)
-            log_prior = y_square + y_mu_double + mu_square + const
-
-            attn = monotonic_align.maximum_path(
-                log_prior.permute(0, 2, 1),
-                attn_mask.squeeze(1).permute(0, 2, 1)).permute(0, 2, 1)
-            # attn: (b,tx,ty)
-            # attn = attn.detach()
-
+        attn=torch.zeros(attn_mask.squeeze(1).shape)
+        for b in range(len(durations)):
+            durationstemp=torch.cumsum(durations[b],dim=0)
+            begin=0
+            for num,i in enumerate(durationstemp[:x_lengths[b]]):
+                attn[b][num][begin:i+1]=1
+                begin=i+1
         # Compute loss between predicted log-scaled durations and those obtained from MAS
         logw_ = torch.log(1 + torch.sum(attn.unsqueeze(1), -1)) * x_mask
+        breakpoint()
+        #logw_ = torch.log(1 + attn.unsqueeze(1)) * x_mask
         # logw_ = torch.log(1 + torch.sum(attn.unsqueeze(1), -1)) * x_mask
         dur_loss = duration_loss(logw, logw_, x_lengths)
 
@@ -327,8 +315,8 @@ class LightGrad(BaseModule):
         mu_y = mu_y.transpose(1, 2)
         # mu_y: (b,80,t_y_clip)
         # Compute loss of score-based decoder
+        
         diff_loss, xt = self.decoder.compute_loss(y, y_mask, mu_y, spk)
-
         # Compute loss between aligned encoder outputs and mel-spectrogram
         # prior_loss: sum(0.5*log(2*pi*sigma_i^2)+0.5*(y_i-mu_i)^2*sigma_i^(-2))
         prior_loss = torch.sum(0.5 * ((y - mu_y)**2 + math.log(2 * math.pi)) *

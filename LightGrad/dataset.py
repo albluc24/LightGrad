@@ -44,8 +44,10 @@ class Dataset(torch.utils.data.Dataset):
         #item_name, wav_path, text, phonemes = self.datalist[i]
         item_name = self.datalist[i]['name']
         wav_path = self.datalist[i]['emb_path']
+        dur_path = self.datalist[i]['dur_path']
         phonemes = self.datalist[i]['phonemes']
         mel=self.load_audio_and_melspectrogram(wav_path)
+        durations=self.load_audio_and_melspectrogram(dur_path)
         if self.add_blank:
             newp=[]
             for p in phonemes:
@@ -55,6 +57,7 @@ class Dataset(torch.utils.data.Dataset):
             'item_name': item_name,
             'ph': phonemes,
             'mel': mel,
+            'durations': durations,
             'ph_idx': ph_idx
         }
         return self.cache[i]
@@ -79,7 +82,7 @@ def collateFn(batch):
     padded_phs = pad_sequence(
         [torch.tensor(batch[i]['ph_idx']) for i in sorted_idx],
         batch_first=True)
-
+    padded_durs = pad_sequence([batch[i]['durations'] for i in sorted_idx], batch_first=True)
     padded_mels = pad_sequence([batch[i]['mel'] for i in sorted_idx],
                                batch_first=True)
     batch_size, old_t, mel_d = padded_mels.shape
@@ -96,6 +99,7 @@ def collateFn(batch):
         'x_lengths': phs_lengths,
         'y': padded_mels.permute(0, 2, 1),
         'y_lengths': mel_lengths,
+        'durations': padded_durs,
         'names': item_names
     }
 
