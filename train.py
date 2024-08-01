@@ -73,7 +73,7 @@ if __name__ == "__main__":
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     print("Start training...")
     iteration = start_steps
-    out_size = 200
+    out_size =config['out_size']
     for epoch in range(start_epoch, start_epoch + 10000):
         model.train()
         dur_losses = []
