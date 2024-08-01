@@ -242,7 +242,7 @@ class LightGrad(BaseModule):
             out_size (int, optional): length (in mel's sampling rate) of segment to cut, on which decoder will be trained.
                 Should be divisible by 2^{num of UNet downsamplings}. Needed to increase batch size.
         """
-        out_size = fix_len_compatibility(out_size)
+        out_size = fix_len_compatibility(out_size) if out_size is not None else None
         x, x_lengths, y, y_lengths = self.relocate_input(
             [x, x_lengths, y, y_lengths])
 
@@ -259,13 +259,14 @@ class LightGrad(BaseModule):
 
         y_mask = sequence_mask(y_lengths, y_max_length).unsqueeze(1).to(x_mask)
         attn_mask = x_mask.unsqueeze(-1) * y_mask.unsqueeze(2)
-        attn=self.relocate_input([torch.zeros(attn_mask.squeeze(1).shape)])[0]
-        for b in range(len(durations)):
-            durationstemp=torch.cumsum(durations[b],dim=0)
-            begin=0
-            for num,i in enumerate(durationstemp[:x_lengths[b]]):
-                attn[b][num][begin:i+1]=1
-                begin=i+1
+        attn= generate_path(durations.squeeze(1), attn_mask.squeeze(1))#.unsqueeze(1)
+        #attn=self.relocate_input([torch.zeros(attn_mask.squeeze(1).shape)])[0]
+        #for b in range(len(durations)):
+            #durationstemp=torch.cumsum(durations[b],dim=0)
+            #begin=0
+            #for num,i in enumerate(durationstemp[:x_lengths[b]]):
+                #attn[b][num][begin:i+1]=1
+                #begin=i+1
         # Compute loss between predicted log-scaled durations and those obtained from MAS
         logw_ = torch.log(1 + torch.sum(attn.unsqueeze(1), -1)) * x_mask
         #logw_ = torch.log(1 + attn.unsqueeze(1)) * x_mask
